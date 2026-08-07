@@ -9,3 +9,4 @@ D:\PROJECTS\ASMS\backend\src\Assignment.Domain\obj\Debug\net8.0\Assignment.Domai
 D:\PROJECTS\ASMS\backend\src\Assignment.Domain\obj\Debug\net8.0\refint\Assignment.Domain.dll
 D:\PROJECTS\ASMS\backend\src\Assignment.Domain\obj\Debug\net8.0\Assignment.Domain.pdb
 D:\PROJECTS\ASMS\backend\src\Assignment.Domain\obj\Debug\net8.0\ref\Assignment.Domain.dll
+D:\PROJECTS\ASMS\backend\src\Assignment.Domain\obj\Debug\net8.0\Assignment.Domain.sourcelink.json

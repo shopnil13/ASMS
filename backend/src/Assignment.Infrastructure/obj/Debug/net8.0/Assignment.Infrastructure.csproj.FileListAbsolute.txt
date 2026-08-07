@@ -13,3 +13,4 @@ D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\Assignme
 D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\refint\Assignment.Infrastructure.dll
 D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\Assignment.Infrastructure.pdb
 D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\ref\Assignment.Infrastructure.dll
+D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\Assignment.Infrastructure.sourcelink.json

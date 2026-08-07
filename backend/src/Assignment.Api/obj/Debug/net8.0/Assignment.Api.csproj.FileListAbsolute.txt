@@ -37,3 +37,4 @@ D:\PROJECTS\ASMS\backend\src\Assignment.Api\obj\Debug\net8.0\refint\Assignment.A
 D:\PROJECTS\ASMS\backend\src\Assignment.Api\obj\Debug\net8.0\Assignment.Api.pdb
 D:\PROJECTS\ASMS\backend\src\Assignment.Api\obj\Debug\net8.0\Assignment.Api.genruntimeconfig.cache
 D:\PROJECTS\ASMS\backend\src\Assignment.Api\obj\Debug\net8.0\ref\Assignment.Api.dll
+D:\PROJECTS\ASMS\backend\src\Assignment.Api\obj\Debug\net8.0\Assignment.Api.sourcelink.json

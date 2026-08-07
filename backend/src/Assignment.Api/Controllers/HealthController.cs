@@ -1,3 +1,4 @@
+using Assignment.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Assignment.Api.Controllers;
@@ -7,9 +8,17 @@ namespace Assignment.Api.Controllers;
 [Route("api/[controller]")]
 public class HealthController : ControllerBase
 {
+    private readonly IHealthService _healthService;
+    
+    public HealthController(IHealthService healthService)
+    {
+        _healthService = healthService;
+    }
+
     [HttpGet]
     public IActionResult GetHealth()
     {
-        return Ok(new { status = "Healthy" });
+        var status = _healthService.GetHealthStatus();
+        return Ok(new { status });
     }
 }

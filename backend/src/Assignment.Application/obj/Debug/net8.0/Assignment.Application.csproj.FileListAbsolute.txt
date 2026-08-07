@@ -13,3 +13,4 @@ D:\PROJECTS\ASMS\backend\src\Assignment.Application\obj\Debug\net8.0\Assignment.
 D:\PROJECTS\ASMS\backend\src\Assignment.Application\obj\Debug\net8.0\refint\Assignment.Application.dll
 D:\PROJECTS\ASMS\backend\src\Assignment.Application\obj\Debug\net8.0\Assignment.Application.pdb
 D:\PROJECTS\ASMS\backend\src\Assignment.Application\obj\Debug\net8.0\ref\Assignment.Application.dll
+D:\PROJECTS\ASMS\backend\src\Assignment.Application\obj\Debug\net8.0\Assignment.Application.sourcelink.json
