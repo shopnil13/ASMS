@@ -32,4 +32,13 @@ public class AuthController : ControllerBase
             });
         }
     }
+
+    
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginRequest request)
+    {
+        var response = await _authService.LoginAsync(request);
+        return Ok(response);
+    }
+
 }
