@@ -1,6 +1,7 @@
 using Assignment.Infrastructure.Data;
 using Assignment.Application.Interfaces;
 using Assignment.Application.Services;
+using Assignment.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -12,7 +13,8 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
-        
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
