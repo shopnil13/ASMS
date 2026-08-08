@@ -14,3 +14,5 @@ D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\refint\A
 D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\Assignment.Infrastructure.pdb
 D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\ref\Assignment.Infrastructure.dll
 D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\Assignment.Infrastructure.sourcelink.json
+D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\bin\Debug\net8.0\Assignment.Infrastructure.runtimeconfig.json
+D:\PROJECTS\ASMS\backend\src\Assignment.Infrastructure\obj\Debug\net8.0\Assignment.Infrastructure.genruntimeconfig.cache
