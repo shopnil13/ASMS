@@ -1,4 +1,5 @@
 using Assignment.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,7 @@ public class HealthController : ControllerBase
         _dbContext = dbContext;
     }
 
+    [Authorize]
     [HttpGet("health")]
     public async Task<IActionResult> GetHealth()
     {
