@@ -1,24 +1,38 @@
-using Assignment.Application.Interfaces;
+using Assignment.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Assignment.Api.Controllers;
-
 
 [ApiController]
 [Route("api/[controller]")]
 public class HealthController : ControllerBase
 {
-    private readonly IHealthService _healthService;
-    
-    public HealthController(IHealthService healthService)
+    private readonly ApplicationDbContext _dbContext;
+
+    public HealthController(ApplicationDbContext dbContext)
     {
-        _healthService = healthService;
+        _dbContext = dbContext;
     }
 
-    [HttpGet]
-    public IActionResult GetHealth()
+    [HttpGet("health")]
+    public async Task<IActionResult> GetHealth()
     {
-        var status = _healthService.GetHealthStatus();
-        return Ok(new { status });
+        var databaseHealthy = await _dbContext.Database.CanConnectAsync();
+
+        if (!databaseHealthy)
+        {
+            return StatusCode(503, new
+            {
+                status = "Unhealthy",
+                database = "Unavailable"
+            });
+        }
+
+        return Ok(new
+        {
+            status = "Healthy",
+            database = "Connected"
+        });
     }
 }
