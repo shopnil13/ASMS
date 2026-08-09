@@ -52,6 +52,7 @@ vite.svg
 *.tsbuildinfo
 
 # Environment files
+logincred.txt
 .env
 .env.*
 !.env.example
