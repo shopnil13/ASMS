@@ -127,20 +127,32 @@ public class SubmissionService : ISubmissionService
             return null;
         }
 
-        // Find the assignment and verify that the logged-in
-        // teacher owns its course.
-        var teacherOwnsAssignment = await _dbContext.Assignments
-            .Where(a => a.Id == submission.AssignmentId)
-            .Join(
-                _dbContext.Courses,
-                assignment => assignment.CourseId,
-                course => course.Id,
-                (assignment, course) => course)
-            .AnyAsync(c => c.TeacherId == teacherId);
+        var assignment = await _dbContext.Assignments
+            .FirstOrDefaultAsync(a => a.Id == submission.AssignmentId);
+
+        if (assignment == null)
+        {
+            return null;
+        }
+
+        // Verify that the logged-in teacher owns
+        // the course containing this assignment.
+        var teacherOwnsAssignment = await _dbContext.Courses
+            .AnyAsync(c =>
+                c.Id == assignment.CourseId &&
+                c.TeacherId == teacherId);
 
         if (!teacherOwnsAssignment)
         {
             return null;
+        }
+
+        // A grade cannot exceed the assignment's total marks.
+        if (marksObtained < 0 || marksObtained > assignment.TotalMarks)
+        {   
+            throw new ArgumentOutOfRangeException(
+                nameof(marksObtained),
+                $"Marks must be between 0 and {assignment.TotalMarks}.");
         }
 
         submission.MarksObtained = marksObtained;
