@@ -10,6 +10,14 @@ public class Submission
 
     public string Content { get; set; } = string.Empty;
 
+    public string? FileName { get; set; }
+
+    public string? FileStorageName { get; set; }
+
+    public string? FileContentType { get; set; }
+
+    public long? FileSize { get; set; }
+
     public DateTime SubmittedAt { get; set; }
 
     public decimal? MarksObtained { get; set; }

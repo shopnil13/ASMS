@@ -1,49 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { LoginResponse } from "@/types/auth";
+import Link from "next/link";
+import { BookOpen, ClipboardCheck, FileText, ShieldCheck } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { roleDescription } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<LoginResponse | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-
-    if (!storedUser) {
-      router.push("/login");
-      return;
-    }
-
-    setUser(JSON.parse(storedUser));
-  }, [router]);
-
-  if (!user) {
-    return <div className="p-8">Loading...</div>;
-  }
+  const { user } = useAuth();
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome, {user.firstName}!
-        </h1>
-
-        <div className="mt-6 rounded-xl bg-white p-6 shadow">
-          <p>
-            <strong>Name:</strong> {user.firstName} {user.lastName}
-          </p>
-
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-
-          <p>
-            <strong>Role:</strong> {user.role}
-          </p>
-        </div>
+    <DashboardLayout>
+      <PageHeader
+        eyebrow={user?.role}
+        title={`Welcome${user ? `, ${user.firstName}` : ""}`}
+        description={user ? roleDescription(user.role) : undefined}
+      />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Card className="border-teal-100/80 bg-teal-50/75">
+          <BookOpen className="h-6 w-6 text-teal-700" />
+          <h2 className="mt-4 font-semibold text-slate-950">Courses</h2>
+          <p className="mt-2 text-sm text-slate-500">Browse all API courses.</p>
+          <Link href="/courses">
+            <Button className="mt-4" variant="secondary">Open</Button>
+          </Link>
+        </Card>
+        <Card className="border-cyan-100/80 bg-cyan-50/75">
+          <FileText className="h-6 w-6 text-cyan-700" />
+          <h2 className="mt-4 font-semibold text-slate-950">Assignments</h2>
+          <p className="mt-2 text-sm text-slate-500">View work by course.</p>
+          <Link href="/assignments">
+            <Button className="mt-4" variant="secondary">Open</Button>
+          </Link>
+        </Card>
+        <Card className="border-amber-100/80 bg-amber-50/75">
+          <ClipboardCheck className="h-6 w-6 text-amber-600" />
+          <h2 className="mt-4 font-semibold text-slate-950">Submissions</h2>
+          <p className="mt-2 text-sm text-slate-500">Submit or grade work.</p>
+          <Link href="/submissions">
+            <Button className="mt-4" variant="secondary">Open</Button>
+          </Link>
+        </Card>
+        {user?.role === "Admin" ? (
+          <Card className="border-rose-100/80 bg-rose-50/75">
+            <ShieldCheck className="h-6 w-6 text-rose-700" />
+            <h2 className="mt-4 font-semibold text-slate-950">Admin</h2>
+            <p className="mt-2 text-sm text-slate-500">Manage platform users.</p>
+            <Link href="/admin/users">
+              <Button className="mt-4" variant="secondary">Open</Button>
+            </Link>
+          </Card>
+        ) : null}
       </div>
-    </main>
+    </DashboardLayout>
   );
 }

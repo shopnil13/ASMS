@@ -45,6 +45,10 @@ public class SubmissionService : ISubmissionService
             AssignmentId = request.AssignmentId,
             StudentId = studentId,
             Content = request.Content,
+            FileName = request.FileName,
+            FileStorageName = request.FileStorageName,
+            FileContentType = request.FileContentType,
+            FileSize = request.FileSize,
             SubmittedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };
@@ -53,7 +57,7 @@ public class SubmissionService : ISubmissionService
 
         await _dbContext.SaveChangesAsync();
 
-        return MapToResponse(submission);
+        return await MapToResponseAsync(submission);
     }
 
     public async Task<SubmissionResponse?> GetSubmissionByIdAsync(
@@ -71,7 +75,7 @@ public class SubmissionService : ISubmissionService
         // The student can view their own submission.
         if (submission.StudentId == userId)
         {
-            return MapToResponse(submission);
+            return await MapToResponseAsync(submission);
         }
 
         // A teacher can view the submission if they own
@@ -90,7 +94,7 @@ public class SubmissionService : ISubmissionService
             return null;
         }
 
-        return MapToResponse(submission);
+        return await MapToResponseAsync(submission);
     }
 
     public async Task<List<SubmissionResponse>> GetSubmissionsByAssignmentAsync(
@@ -104,13 +108,39 @@ public class SubmissionService : ISubmissionService
                 Id = s.Id,
                 AssignmentId = s.AssignmentId,
                 StudentId = s.StudentId,
+                StudentName = _dbContext.Users
+                    .Where(u => u.Id == s.StudentId)
+                    .Select(u => u.FirstName + " " + u.LastName)
+                    .FirstOrDefault() ?? "Unknown Student",
                 Content = s.Content,
+                FileName = s.FileName,
+                FileStorageName = s.FileStorageName,
+                FileContentType = s.FileContentType,
+                FileSize = s.FileSize,
+                FileUrl = s.FileStorageName == null
+                    ? null
+                    : $"/Submission/{s.Id}/file",
                 SubmittedAt = s.SubmittedAt,
                 MarksObtained = s.MarksObtained,
                 Feedback = s.Feedback,
                 CreatedAt = s.CreatedAt
             })
             .ToListAsync();
+    }
+
+    public async Task<SubmissionResponse?> GetStudentSubmissionForAssignmentAsync(
+        Guid assignmentId,
+        Guid studentId)
+    {
+        var submission = await _dbContext.Submissions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s =>
+                s.AssignmentId == assignmentId &&
+                s.StudentId == studentId);
+
+        return submission == null
+            ? null
+            : await MapToResponseAsync(submission);
     }
 
     public async Task<SubmissionResponse?> GradeSubmissionAsync(
@@ -160,18 +190,31 @@ public class SubmissionService : ISubmissionService
 
         await _dbContext.SaveChangesAsync();
 
-        return MapToResponse(submission);
+        return await MapToResponseAsync(submission);
     }
 
-    private static SubmissionResponse MapToResponse(
+    private async Task<SubmissionResponse> MapToResponseAsync(
         Domain.Entities.Submission submission)
     {
+        var studentName = await _dbContext.Users
+            .Where(u => u.Id == submission.StudentId)
+            .Select(u => u.FirstName + " " + u.LastName)
+            .FirstOrDefaultAsync();
+
         return new SubmissionResponse
         {
             Id = submission.Id,
             AssignmentId = submission.AssignmentId,
             StudentId = submission.StudentId,
+            StudentName = studentName ?? "Unknown Student",
             Content = submission.Content,
+            FileName = submission.FileName,
+            FileStorageName = submission.FileStorageName,
+            FileContentType = submission.FileContentType,
+            FileSize = submission.FileSize,
+            FileUrl = submission.FileStorageName == null
+                ? null
+                : $"/Submission/{submission.Id}/file",
             SubmittedAt = submission.SubmittedAt,
             MarksObtained = submission.MarksObtained,
             Feedback = submission.Feedback,

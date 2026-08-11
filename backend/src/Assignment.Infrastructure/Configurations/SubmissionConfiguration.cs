@@ -17,6 +17,15 @@ public class SubmissionConfiguration
         builder.Property(submission => submission.Content)
             .IsRequired();
 
+        builder.Property(submission => submission.FileName)
+            .HasMaxLength(255);
+
+        builder.Property(submission => submission.FileStorageName)
+            .HasMaxLength(255);
+
+        builder.Property(submission => submission.FileContentType)
+            .HasMaxLength(100);
+
         builder.Property(submission => submission.SubmittedAt)
             .IsRequired();
 

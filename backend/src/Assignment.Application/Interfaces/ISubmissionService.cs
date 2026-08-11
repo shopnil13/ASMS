@@ -15,6 +15,10 @@ public interface ISubmissionService
     Task<List<SubmissionResponse>> GetSubmissionsByAssignmentAsync(
         Guid assignmentId);
 
+    Task<SubmissionResponse?> GetStudentSubmissionForAssignmentAsync(
+        Guid assignmentId,
+        Guid studentId);
+
     Task<SubmissionResponse?> GradeSubmissionAsync(
         Guid id,
         decimal marksObtained,
