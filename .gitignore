@@ -93,6 +93,8 @@ Desktop.ini
 docker-compose.override.yml
 *.pid
 *.seed
+SubmissionFiles/
+backend/src/Assignment.Api/SubmissionFiles/
 
 # Temporary files
 tmp/

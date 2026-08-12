@@ -41,7 +41,9 @@ public class SubmissionService : ISubmissionService
 
         var submission = new Domain.Entities.Submission
         {
-            Id = Guid.NewGuid(),
+            Id = request.Id == Guid.Empty
+                ? Guid.NewGuid()
+                : request.Id,
             AssignmentId = request.AssignmentId,
             StudentId = studentId,
             Content = request.Content,

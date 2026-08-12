@@ -13,14 +13,14 @@ public class SubmissionController : ControllerBase
 {
     private const long MaxPdfBytes = 25 * 1024 * 1024;
     private readonly ISubmissionService _submissionService;
-    private readonly IWebHostEnvironment _environment;
+    private readonly ISubmissionFileStorageService _fileStorageService;
 
     public SubmissionController(
         ISubmissionService submissionService,
-        IWebHostEnvironment environment)
+        ISubmissionFileStorageService fileStorageService)
     {
         _submissionService = submissionService;
-        _environment = environment;
+        _fileStorageService = fileStorageService;
     }
 
     [HttpPost]
@@ -66,10 +66,12 @@ public class SubmissionController : ControllerBase
             });
         }
 
-        var storageName = $"{Guid.NewGuid():N}.pdf";
+        var submissionId = Guid.NewGuid();
+        var storageName = $"submissions/{submissionId:N}.pdf";
 
         var createRequest = new CreateSubmissionRequest
         {
+            Id = submissionId,
             AssignmentId = request.AssignmentId,
             Content = request.Content ?? string.Empty,
             FileName = Path.GetFileName(request.PdfFile.FileName),
@@ -91,13 +93,11 @@ public class SubmissionController : ControllerBase
             });
         }
 
-        var uploadPath = GetUploadPath(storageName);
-        Directory.CreateDirectory(Path.GetDirectoryName(uploadPath)!);
-
-        await using (var stream = System.IO.File.Create(uploadPath))
-        {
-            await request.PdfFile.CopyToAsync(stream);
-        }
+        await _fileStorageService.SaveAsync(
+            storageName,
+            request.PdfFile.OpenReadStream(),
+            "application/pdf",
+            HttpContext.RequestAborted);
 
         return CreatedAtAction(
             nameof(GetSubmissionById),
@@ -168,9 +168,11 @@ public class SubmissionController : ControllerBase
             });
         }
 
-        var uploadPath = GetUploadPath(submission.FileStorageName);
+        var storedFile = await _fileStorageService.GetAsync(
+            submission.FileStorageName,
+            HttpContext.RequestAborted);
 
-        if (!System.IO.File.Exists(uploadPath))
+        if (storedFile == null)
         {
             return NotFound(new
             {
@@ -178,20 +180,18 @@ public class SubmissionController : ControllerBase
             });
         }
 
-        var stream = System.IO.File.OpenRead(uploadPath);
-
         if (download)
         {
             return File(
-                stream,
-                submission.FileContentType ?? "application/pdf",
+                storedFile.Content,
+                storedFile.ContentType,
                 submission.FileName ?? "submission.pdf",
                 enableRangeProcessing: true);
         }
 
         return File(
-            stream,
-            submission.FileContentType ?? "application/pdf",
+            storedFile.Content,
+            storedFile.ContentType,
             enableRangeProcessing: true);
     }
 
@@ -277,14 +277,6 @@ public class SubmissionController : ControllerBase
         }
 
         return Ok(submission);
-    }
-
-    private string GetUploadPath(string storageName)
-    {
-        return Path.Combine(
-            _environment.ContentRootPath,
-            "SubmissionFiles",
-            storageName);
     }
 
     private static bool IsPdf(IFormFile file)
