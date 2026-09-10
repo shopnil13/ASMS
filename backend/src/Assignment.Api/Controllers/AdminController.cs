@@ -19,9 +19,15 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers(
+        string? search,
+        int page = 1,
+        int pageSize = 20)
     {
-        var users = await _adminUserService.GetUsersAsync();
+        var users = await _adminUserService.GetUsersAsync(
+            search,
+            page,
+            pageSize);
 
         return Ok(users);
     }
@@ -98,6 +104,24 @@ public class AdminController : ControllerBase
                 message = ex.Message
             });
         }
+    }
+
+    [HttpPut("{id:guid}/password")]
+    public async Task<IActionResult> ResetPassword(
+        Guid id,
+        ResetPasswordRequest request)
+    {
+        var reset = await _adminUserService.ResetPasswordAsync(id, request);
+
+        if (!reset)
+        {
+            return NotFound(new
+            {
+                message = "User not found."
+            });
+        }
+
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

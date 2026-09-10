@@ -46,7 +46,7 @@ export default function EditCoursePage() {
       <PageHeader title="Edit course" />
       <Card>
         {user && course ? (
-          <CourseForm initial={course} teacherId={user.userId} error={error} onSubmit={submit} />
+          <CourseForm initial={course} error={error} onSubmit={submit} />
         ) : null}
       </Card>
     </DashboardLayout>

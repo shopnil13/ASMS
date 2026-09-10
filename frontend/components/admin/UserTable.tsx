@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { KeyRound, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { RoleSelector } from "@/components/admin/RoleSelector";
 import { Table } from "@/components/ui/Table";
@@ -11,10 +11,12 @@ export function UserTable({
   users,
   onRoleChanged,
   onDelete,
+  onResetPassword,
 }: {
   users: AdminUser[];
   onRoleChanged: (user: AdminUser) => void;
   onDelete: (id: string) => void;
+  onResetPassword: (id: string, email: string) => void;
 }) {
   return (
     <Table>
@@ -42,6 +44,15 @@ export function UserTable({
               {formatDate(user.createdAt)}
             </td>
             <td className="px-4 py-3 text-right">
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label={`Reset password for ${user.email}`}
+                className="h-9 w-9 p-0 text-slate-600 hover:text-slate-950"
+                onClick={() => onResetPassword(user.id, user.email)}
+              >
+                <KeyRound className="h-4 w-4" />
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

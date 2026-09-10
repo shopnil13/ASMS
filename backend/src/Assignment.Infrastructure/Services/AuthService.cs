@@ -96,6 +96,28 @@ private readonly IConfiguration _configuration;
         };
     }
 
+    public async Task<CurrentUserResponse?> GetCurrentUserAsync(Guid userId)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        return new CurrentUserResponse
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            Role = user.Role.ToString(),
+            CreatedAt = user.CreatedAt
+        };
+    }
+
     private string GenerateJwtToken(User user)
 {
     var key = _configuration["Jwt:Key"]

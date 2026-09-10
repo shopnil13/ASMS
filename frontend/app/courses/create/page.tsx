@@ -29,9 +29,9 @@ export default function CreateCoursePage() {
 
   return (
     <DashboardLayout roles={["Teacher"]}>
-      <PageHeader title="Create course" description="The backend uses the teacher id from the JWT; the required DTO field is still sent for compatibility." />
+      <PageHeader title="Create course" />
       <Card>
-        {user ? <CourseForm teacherId={user.userId} error={error} onSubmit={submit} /> : null}
+        {user ? <CourseForm error={error} onSubmit={submit} /> : null}
       </Card>
     </DashboardLayout>
   );

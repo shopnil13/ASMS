@@ -11,5 +11,4 @@ export interface CourseRequest {
   code: string;
   name: string;
   description: string;
-  teacherId: string;
 }

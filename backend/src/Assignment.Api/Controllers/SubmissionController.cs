@@ -198,11 +198,63 @@ public class SubmissionController : ControllerBase
     [HttpGet("assignment/{assignmentId:guid}")]
     [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetSubmissionsByAssignment(
-        Guid assignmentId)
+        Guid assignmentId,
+        string? search,
+        int page = 1,
+        int pageSize = 20)
     {
+        var userIdClaim = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+        {
+            return Unauthorized();
+        }
+
+        if (!Guid.TryParse(userIdClaim, out var teacherId))
+        {
+            return Unauthorized();
+        }
+
         var submissions =
             await _submissionService.GetSubmissionsByAssignmentAsync(
-                assignmentId);
+                assignmentId,
+                teacherId,
+                search,
+                page,
+                pageSize);
+
+        if (submissions == null)
+        {
+            return NotFound(new
+            {
+                message = "Assignment not found or you are not the course owner."
+            });
+        }
+
+        return Ok(submissions);
+    }
+
+    [HttpGet("mine")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetMySubmissions()
+    {
+        var userIdClaim = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+        {
+            return Unauthorized();
+        }
+
+        if (!Guid.TryParse(userIdClaim, out var studentId))
+        {
+            return Unauthorized();
+        }
+
+        var submissions =
+            await _submissionService.GetSubmissionsByStudentAsync(
+                studentId);
 
         return Ok(submissions);
     }

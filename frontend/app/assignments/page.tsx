@@ -43,17 +43,10 @@ export default function AssignmentsPage() {
         setAssignments(allAssignments);
 
         if (user?.role === "Student") {
-          const submitted = await Promise.all(
-            allAssignments.map((assignment) =>
-              api
-                .get<Submission>(`/Submission/assignment/${assignment.id}/mine`)
-                .then(() => assignment.id)
-                .catch(() => null),
-            ),
-          );
+          const { data: mySubmissions } = await api.get<Submission[]>("/Submission/mine");
 
           setSubmittedAssignmentIds(
-            new Set(submitted.filter((id): id is string => Boolean(id))),
+            new Set(mySubmissions.map((submission) => submission.assignmentId)),
           );
         } else {
           setSubmittedAssignmentIds(new Set());

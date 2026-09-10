@@ -7,6 +7,8 @@ import { Edit, Plus, Trash2 } from "lucide-react";
 import api, { getApiErrorMessage } from "@/lib/api";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 import { CourseDetails } from "@/components/courses/CourseDetails";
 import { AssignmentList } from "@/components/assignments/AssignmentList";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -21,7 +23,16 @@ export default function CourseDetailsPage() {
   const { user } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [error, setError] = useState("");
-  const { assignments, loading } = useAssignments(id);
+  const {
+    assignments,
+    loading,
+    search,
+    setSearch,
+    page,
+    setPage,
+    totalPages,
+    totalCount,
+  } = useAssignments(id, 8);
 
   useEffect(() => {
     async function load() {
@@ -73,7 +84,21 @@ export default function CourseDetailsPage() {
       {course ? <CourseDetails course={course} /> : null}
       <div className="mt-8">
         <PageHeader title="Assignments" />
+        <div className="mb-4 max-w-sm">
+          <Input
+            label="Search"
+            placeholder="Search by assignment title"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <AssignmentList assignments={assignments} loading={loading} canCreate={Boolean(canManage)} />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={setPage}
+        />
       </div>
     </DashboardLayout>
   );

@@ -14,7 +14,4 @@ public class CreateCourseRequest
 
     [StringLength(2000)]
     public string Description { get; set; } = string.Empty;
-
-    [Required]
-    public Guid TeacherId { get; set; }
 }

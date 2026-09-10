@@ -12,7 +12,9 @@ ASMS is a full-stack assignment submission management system for students, teach
 - Inline PDF preview for submitted work.
 - Explicit PDF download action per submission.
 - Teacher grading with marks and feedback.
-- Admin user management and role updates.
+- Admin user management, role updates, and password resets.
+- Current-user profile lookup (`GET /api/Auth/me`).
+- Pagination and search for courses, assignments, admin users, and submissions.
 - Responsive, modern frontend UI.
 - Frontend validation with Zod and React Hook Form.
 - Frontend unit tests with Vitest and Testing Library.
@@ -323,10 +325,7 @@ Cors__AllowedOrigins=https://YOUR_VERCEL_APP.vercel.app
 
 - Local development stores PDFs on disk unless `Storage__Provider=Supabase` is configured.
 - The API reads PDF files into memory when previewing or downloading them; the current upload limit is 25 MB.
-- There is no pagination or search for courses, assignments, users, or submissions.
-- The assignment dashboard checks submitted status by querying each assignment for the current student.
-- There is no password reset flow.
-- There is no user profile or `/api/Auth/me` endpoint.
-- Admin delete is a hard delete and may be blocked by course or submission dependencies.
+- Password reset is admin-driven only (an admin sets a new password for a user); there is no self-service "forgot password" email flow.
+- Admin delete is a hard delete and is blocked when the user has courses or submissions.
 - Some backend error handling is still basic for edge cases.
-- Backend secrets and connection strings should be moved to user secrets or environment variables before production use.
+- Backend secrets and connection strings are stored via `dotnet user-secrets` locally (see Database Setup); production still needs its own environment variables configured on the host.

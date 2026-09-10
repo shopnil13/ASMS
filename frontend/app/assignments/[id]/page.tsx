@@ -7,6 +7,8 @@ import { ClipboardCheck, Edit, Trash2 } from "lucide-react";
 import api, { getApiErrorMessage } from "@/lib/api";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 import { AssignmentDetails } from "@/components/assignments/AssignmentDetails";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -31,6 +33,12 @@ export default function AssignmentDetailsPage() {
     submissions,
     loading: submissionsLoading,
     createSubmission,
+    search: submissionSearch,
+    setSearch: setSubmissionSearch,
+    page: submissionPage,
+    setPage: setSubmissionPage,
+    totalPages: submissionTotalPages,
+    totalCount: submissionTotalCount,
   } = useSubmissions(user?.role === "Teacher" ? id : undefined);
 
   useEffect(() => {
@@ -128,7 +136,21 @@ export default function AssignmentDetailsPage() {
       {user?.role === "Teacher" ? (
         <div className="mt-8">
           <PageHeader title="Submissions" action={<ClipboardCheck className="h-5 w-5 text-slate-400" />} />
+          <div className="mb-4 max-w-sm">
+            <Input
+              label="Search"
+              placeholder="Search by student name or email"
+              value={submissionSearch}
+              onChange={(e) => setSubmissionSearch(e.target.value)}
+            />
+          </div>
           <SubmissionList submissions={submissions} loading={submissionsLoading} canGrade />
+          <Pagination
+            page={submissionPage}
+            totalPages={submissionTotalPages}
+            totalCount={submissionTotalCount}
+            onPageChange={setSubmissionPage}
+          />
         </div>
       ) : null}
     </DashboardLayout>
