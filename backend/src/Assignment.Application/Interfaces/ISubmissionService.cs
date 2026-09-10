@@ -1,3 +1,4 @@
+using Assignment.Application.DTOs;
 using Assignment.Application.DTOs.Submission;
 
 namespace Assignment.Application.Interfaces;
@@ -12,8 +13,15 @@ public interface ISubmissionService
         Guid id,
         Guid userId);
 
-    Task<List<SubmissionResponse>> GetSubmissionsByAssignmentAsync(
-        Guid assignmentId);
+    Task<PagedResult<SubmissionResponse>?> GetSubmissionsByAssignmentAsync(
+        Guid assignmentId,
+        Guid teacherId,
+        string? search,
+        int page,
+        int pageSize);
+
+    Task<List<SubmissionResponse>> GetSubmissionsByStudentAsync(
+        Guid studentId);
 
     Task<SubmissionResponse?> GetStudentSubmissionForAssignmentAsync(
         Guid assignmentId,

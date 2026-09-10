@@ -1,3 +1,4 @@
+using Assignment.Application.DTOs;
 using Assignment.Application.DTOs.Course;
 
 namespace Assignment.Application.Interfaces;
@@ -8,7 +9,10 @@ public interface ICourseService
         CreateCourseRequest request,
         Guid teacherId);
 
-    Task<List<CourseResponse>> GetCoursesAsync();
+    Task<PagedResult<CourseResponse>> GetCoursesAsync(
+        string? search,
+        int page,
+        int pageSize);
 
     Task<CourseResponse?> GetCourseByIdAsync(Guid id);
 

@@ -1,3 +1,4 @@
+using Assignment.Application.DTOs;
 using Assignment.Application.DTOs.Course;
 using Assignment.Application.Interfaces;
 using Assignment.Domain.Entities;
@@ -9,10 +10,14 @@ namespace Assignment.Infrastructure.Services;
 public class CourseService : ICourseService
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ISubmissionFileStorageService _fileStorageService;
 
-    public CourseService(ApplicationDbContext dbContext)
+    public CourseService(
+        ApplicationDbContext dbContext,
+        ISubmissionFileStorageService fileStorageService)
     {
         _dbContext = dbContext;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<CourseResponse> CreateCourseAsync(
@@ -44,10 +49,29 @@ public class CourseService : ICourseService
         };
     }
 
-    public async Task<List<CourseResponse>> GetCoursesAsync()
+    public async Task<PagedResult<CourseResponse>> GetCoursesAsync(
+        string? search,
+        int page,
+        int pageSize)
     {
-        return await _dbContext.Courses
-            .AsNoTracking()
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _dbContext.Courses.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(course =>
+                EF.Functions.ILike(course.Code, $"%{search}%") ||
+                EF.Functions.ILike(course.Name, $"%{search}%"));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(course => course.Code)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(course => new CourseResponse
             {
                 Id = course.Id,
@@ -58,6 +82,14 @@ public class CourseService : ICourseService
                 CreatedAt = course.CreatedAt
             })
             .ToListAsync();
+
+        return new PagedResult<CourseResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<CourseResponse?> GetCourseByIdAsync(Guid id)
@@ -120,9 +152,26 @@ public class CourseService : ICourseService
             return false;
         }
 
+        var assignmentIds = await _dbContext.Assignments
+            .Where(a => a.CourseId == id)
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        var fileStorageNames = await _dbContext.Submissions
+            .Where(s =>
+                assignmentIds.Contains(s.AssignmentId) &&
+                s.FileStorageName != null)
+            .Select(s => s.FileStorageName!)
+            .ToListAsync();
+
         _dbContext.Courses.Remove(course);
 
         await _dbContext.SaveChangesAsync();
+
+        foreach (var fileStorageName in fileStorageNames)
+        {
+            await _fileStorageService.DeleteAsync(fileStorageName);
+        }
 
         return true;
     }

@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/SubmissionFiles/
+**/*.user
+**/*.suo
+**/*.log
+.git/
+.gitignore
+Dockerfile
+docker-compose.override.yml

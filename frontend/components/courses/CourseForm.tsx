@@ -13,12 +13,10 @@ type FormValues = z.infer<typeof courseSchema>;
 
 export function CourseForm({
   initial,
-  teacherId,
   error,
   onSubmit,
 }: {
   initial?: Course;
-  teacherId: string;
   error?: string;
   onSubmit: (request: CourseRequest) => Promise<void>;
 }) {
@@ -35,7 +33,6 @@ export function CourseForm({
     await onSubmit({
       ...values,
       description: values.description ?? "",
-      teacherId,
     });
   }
 

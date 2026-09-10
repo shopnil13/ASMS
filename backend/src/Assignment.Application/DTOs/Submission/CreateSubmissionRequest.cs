@@ -4,6 +4,8 @@ namespace Assignment.Application.DTOs.Submission;
 
 public class CreateSubmissionRequest
 {
+    public Guid Id { get; set; }
+
     [Required]
     public Guid AssignmentId { get; set; }
 

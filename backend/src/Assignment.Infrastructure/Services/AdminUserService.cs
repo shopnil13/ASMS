@@ -1,3 +1,4 @@
+using Assignment.Application.DTOs;
 using Assignment.Application.DTOs.Admin;
 using Assignment.Application.Interfaces;
 using Assignment.Domain.Entities;
@@ -19,13 +20,40 @@ public class AdminUserService : IAdminUserService
         _passwordHasher = new PasswordHasher<User>();
     }
 
-    public async Task<List<AdminUserResponse>> GetUsersAsync()
+    public async Task<PagedResult<AdminUserResponse>> GetUsersAsync(
+        string? search,
+        int page,
+        int pageSize)
     {
-        return await _dbContext.Users
-            .AsNoTracking()
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _dbContext.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(user =>
+                EF.Functions.ILike(user.FirstName, $"%{search}%") ||
+                EF.Functions.ILike(user.LastName, $"%{search}%") ||
+                EF.Functions.ILike(user.Email, $"%{search}%"));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(user => user.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(user => MapToResponse(user))
             .ToListAsync();
+
+        return new PagedResult<AdminUserResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<AdminUserResponse?> GetUserByIdAsync(Guid id)
@@ -124,6 +152,27 @@ public class AdminUserService : IAdminUserService
         await _dbContext.SaveChangesAsync();
 
         return DeleteUserResult.Deleted;
+    }
+
+    public async Task<bool> ResetPasswordAsync(
+        Guid id,
+        ResetPasswordRequest request)
+    {
+        var user = await _dbContext.Users
+            .FirstOrDefaultAsync(user => user.Id == id);
+
+        if (user == null)
+        {
+            return false;
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(
+            user,
+            request.NewPassword);
+
+        await _dbContext.SaveChangesAsync();
+
+        return true;
     }
 
     private static UserRole ParseRole(string role)

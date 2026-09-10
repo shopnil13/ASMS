@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses } from "@/hooks/useCourses";
 import type { Assignment } from "@/types/assignment";
+import type { PagedResult } from "@/types/paged";
 import type { Submission } from "@/types/submission";
 
 export default function AssignmentsPage() {
@@ -35,25 +36,20 @@ export default function AssignmentsPage() {
         const results = await Promise.all(
           courses.map((course) =>
             api
-              .get<Assignment[]>(`/Assignment/course/${course.id}`)
-              .then((response) => response.data),
+              .get<PagedResult<Assignment>>(`/Assignment/course/${course.id}`, {
+                params: { pageSize: 100 },
+              })
+              .then((response) => response.data.items),
           ),
         );
         const allAssignments = results.flat();
         setAssignments(allAssignments);
 
         if (user?.role === "Student") {
-          const submitted = await Promise.all(
-            allAssignments.map((assignment) =>
-              api
-                .get<Submission>(`/Submission/assignment/${assignment.id}/mine`)
-                .then(() => assignment.id)
-                .catch(() => null),
-            ),
-          );
+          const { data: mySubmissions } = await api.get<Submission[]>("/Submission/mine");
 
           setSubmittedAssignmentIds(
-            new Set(submitted.filter((id): id is string => Boolean(id))),
+            new Set(mySubmissions.map((submission) => submission.assignmentId)),
           );
         } else {
           setSubmittedAssignmentIds(new Set());

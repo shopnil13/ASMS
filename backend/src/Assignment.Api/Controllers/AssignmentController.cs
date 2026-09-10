@@ -56,10 +56,17 @@ public class AssignmentController : ControllerBase
 
     [HttpGet("course/{courseId:guid}")]
     public async Task<IActionResult> GetAssignmentsByCourse(
-        Guid courseId)
+        Guid courseId,
+        string? search,
+        int page = 1,
+        int pageSize = 20)
     {
         var assignments =
-            await _assignmentService.GetAssignmentsByCourseAsync(courseId);
+            await _assignmentService.GetAssignmentsByCourseAsync(
+                courseId,
+                search,
+                page,
+                pageSize);
 
         return Ok(assignments);
     }

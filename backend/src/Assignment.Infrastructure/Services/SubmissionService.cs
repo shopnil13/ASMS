@@ -1,3 +1,4 @@
+using Assignment.Application.DTOs;
 using Assignment.Application.DTOs.Submission;
 using Assignment.Application.Interfaces;
 using Assignment.Infrastructure.Data;
@@ -41,7 +42,9 @@ public class SubmissionService : ISubmissionService
 
         var submission = new Domain.Entities.Submission
         {
-            Id = Guid.NewGuid(),
+            Id = request.Id == Guid.Empty
+                ? Guid.NewGuid()
+                : request.Id,
             AssignmentId = request.AssignmentId,
             StudentId = studentId,
             Content = request.Content,
@@ -97,12 +100,93 @@ public class SubmissionService : ISubmissionService
         return await MapToResponseAsync(submission);
     }
 
-    public async Task<List<SubmissionResponse>> GetSubmissionsByAssignmentAsync(
-        Guid assignmentId)
+    public async Task<PagedResult<SubmissionResponse>?> GetSubmissionsByAssignmentAsync(
+        Guid assignmentId,
+        Guid teacherId,
+        string? search,
+        int page,
+        int pageSize)
+    {
+        var assignment = await _dbContext.Assignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+        if (assignment == null)
+        {
+            return null;
+        }
+
+        // Only the teacher who owns the course containing this
+        // assignment may view its submissions.
+        var teacherOwnsAssignment = await _dbContext.Courses
+            .AnyAsync(c =>
+                c.Id == assignment.CourseId &&
+                c.TeacherId == teacherId);
+
+        if (!teacherOwnsAssignment)
+        {
+            return null;
+        }
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query =
+            from s in _dbContext.Submissions.AsNoTracking()
+            join u in _dbContext.Users.AsNoTracking()
+                on s.StudentId equals u.Id
+            where s.AssignmentId == assignmentId
+            select new { Submission = s, Student = u };
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(x =>
+                EF.Functions.ILike(x.Student.FirstName, $"%{search}%") ||
+                EF.Functions.ILike(x.Student.LastName, $"%{search}%") ||
+                EF.Functions.ILike(x.Student.Email, $"%{search}%"));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(x => x.Submission.SubmittedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new SubmissionResponse
+            {
+                Id = x.Submission.Id,
+                AssignmentId = x.Submission.AssignmentId,
+                StudentId = x.Submission.StudentId,
+                StudentName = x.Student.FirstName + " " + x.Student.LastName,
+                Content = x.Submission.Content,
+                FileName = x.Submission.FileName,
+                FileStorageName = x.Submission.FileStorageName,
+                FileContentType = x.Submission.FileContentType,
+                FileSize = x.Submission.FileSize,
+                FileUrl = x.Submission.FileStorageName == null
+                    ? null
+                    : $"/Submission/{x.Submission.Id}/file",
+                SubmittedAt = x.Submission.SubmittedAt,
+                MarksObtained = x.Submission.MarksObtained,
+                Feedback = x.Submission.Feedback,
+                CreatedAt = x.Submission.CreatedAt
+            })
+            .ToListAsync();
+
+        return new PagedResult<SubmissionResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    public async Task<List<SubmissionResponse>> GetSubmissionsByStudentAsync(
+        Guid studentId)
     {
         return await _dbContext.Submissions
             .AsNoTracking()
-            .Where(s => s.AssignmentId == assignmentId)
+            .Where(s => s.StudentId == studentId)
             .Select(s => new SubmissionResponse
             {
                 Id = s.Id,

@@ -46,9 +46,15 @@ public class CourseController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCourses()
+    public async Task<IActionResult> GetCourses(
+        string? search,
+        int page = 1,
+        int pageSize = 20)
     {
-        var courses = await _courseService.GetCoursesAsync();
+        var courses = await _courseService.GetCoursesAsync(
+            search,
+            page,
+            pageSize);
 
         return Ok(courses);
     }

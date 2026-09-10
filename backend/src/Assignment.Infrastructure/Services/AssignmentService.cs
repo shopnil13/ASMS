@@ -1,3 +1,4 @@
+using Assignment.Application.DTOs;
 using Assignment.Application.DTOs.Assignment;
 using Assignment.Application.Interfaces;
 using Assignment.Infrastructure.Data;
@@ -8,10 +9,14 @@ namespace Assignment.Infrastructure.Services;
 public class AssignmentService : IAssignmentService
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ISubmissionFileStorageService _fileStorageService;
 
-    public AssignmentService(ApplicationDbContext dbContext)
+    public AssignmentService(
+        ApplicationDbContext dbContext,
+        ISubmissionFileStorageService fileStorageService)
     {
         _dbContext = dbContext;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<AssignmentResponse?> CreateAssignmentAsync(
@@ -57,12 +62,31 @@ public class AssignmentService : IAssignmentService
         };
     }
 
-    public async Task<List<AssignmentResponse>> GetAssignmentsByCourseAsync(
-        Guid courseId)
+    public async Task<PagedResult<AssignmentResponse>> GetAssignmentsByCourseAsync(
+        Guid courseId,
+        string? search,
+        int page,
+        int pageSize)
     {
-        return await _dbContext.Assignments
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _dbContext.Assignments
             .AsNoTracking()
-            .Where(a => a.CourseId == courseId)
+            .Where(a => a.CourseId == courseId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(a =>
+                EF.Functions.ILike(a.Title, $"%{search}%"));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(a => a.DueDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => new AssignmentResponse
             {
                 Id = a.Id,
@@ -74,6 +98,14 @@ public class AssignmentService : IAssignmentService
                 CreatedAt = a.CreatedAt
             })
             .ToListAsync();
+
+        return new PagedResult<AssignmentResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<AssignmentResponse?> GetAssignmentByIdAsync(
@@ -168,9 +200,21 @@ public class AssignmentService : IAssignmentService
             return false;
         }
 
+        var fileStorageNames = await _dbContext.Submissions
+            .Where(s =>
+                s.AssignmentId == id &&
+                s.FileStorageName != null)
+            .Select(s => s.FileStorageName!)
+            .ToListAsync();
+
         _dbContext.Assignments.Remove(assignment);
 
         await _dbContext.SaveChangesAsync();
+
+        foreach (var fileStorageName in fileStorageNames)
+        {
+            await _fileStorageService.DeleteAsync(fileStorageName);
+        }
 
         return true;
     }

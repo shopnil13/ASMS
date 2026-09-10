@@ -1,6 +1,8 @@
 using Assignment.Application.DTOs;
 using Assignment.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Assignment.Api.Controllers;
 
@@ -49,6 +51,30 @@ public class AuthController : ControllerBase
                 message = ex.Message
             });
         }
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _authService.GetCurrentUserAsync(userId);
+
+        if (user == null)
+        {
+            return NotFound(new
+            {
+                message = "User not found."
+            });
+        }
+
+        return Ok(user);
     }
 
 }

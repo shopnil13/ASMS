@@ -14,23 +14,23 @@ var builder = WebApplication.CreateBuilder(args);
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT key is not configured.");
 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]
-    ?? throw new InvalidOperationException("JWT issuer is not configured.");
-
-var jwtAudience = builder.Configuration["Jwt:Audience"]
-    ?? throw new InvalidOperationException("JWT audience is not configured.");
-
-
 // Add services to the container.
 builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendDev", policy =>
+    options.AddPolicy("Frontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:3001")
+        var configuredOrigins =
+            builder.Configuration["Cors:AllowedOrigins"]?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? [];
+
+        var origins = configuredOrigins.Length == 0
+            ? ["http://localhost:3000", "http://localhost:3001"]
+            : configuredOrigins;
+
+        policy.WithOrigins(origins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -47,6 +47,17 @@ builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
+if (string.Equals(
+        builder.Configuration["Storage:Provider"],
+        "Supabase",
+        StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddHttpClient<ISubmissionFileStorageService, SupabaseSubmissionFileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<ISubmissionFileStorageService, LocalSubmissionFileStorageService>();
+}
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -105,6 +116,17 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+
+    await AdminSeeder.SeedAsync(
+        dbContext,
+        app.Configuration);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -112,9 +134,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Render terminates HTTPS at the proxy/load-balancer.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseCors("FrontendDev");
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
