@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses } from "@/hooks/useCourses";
 import type { Assignment } from "@/types/assignment";
+import type { PagedResult } from "@/types/paged";
 import type { Submission } from "@/types/submission";
 
 export default function AssignmentsPage() {
@@ -35,8 +36,10 @@ export default function AssignmentsPage() {
         const results = await Promise.all(
           courses.map((course) =>
             api
-              .get<Assignment[]>(`/Assignment/course/${course.id}`)
-              .then((response) => response.data),
+              .get<PagedResult<Assignment>>(`/Assignment/course/${course.id}`, {
+                params: { pageSize: 100 },
+              })
+              .then((response) => response.data.items),
           ),
         );
         const allAssignments = results.flat();
